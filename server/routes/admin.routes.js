@@ -8,6 +8,7 @@ router.use(authenticate, roleCheck('admin'));
 
 router.get('/dashboard', AdminController.getDashboard);
 router.get('/users', AdminController.getUsers);
+router.post('/users', AdminController.createUser);
 router.put('/users/:id/status', AdminController.toggleUserStatus);
 router.get('/rides', AdminController.getRides);
 router.get('/vehicles', AdminController.getVehicles);

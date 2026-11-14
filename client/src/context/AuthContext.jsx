@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     const presets = {
       rider: { _id: 5, user_id: 5, name: 'Rahul Kumar Patel', full_name: 'Rahul Kumar Patel', email: 'rahul.patel@adaniuni.ac.in', phone: '9876500005', role: 'rider' },
       driver: { _id: 1, user_id: 1, name: 'Ramesh Patel', full_name: 'Ramesh Patel', email: 'ramesh.driver@ridego.in', phone: '9876543210', role: 'driver' },
-      admin: { _id: 99, user_id: 99, name: 'Dhruv & Rudra (Admin)', full_name: 'Dhruv & Rudra (Admin)', email: 'admin@ridego.in', phone: '9876500099', role: 'admin' },
+      admin: { _id: 1, user_id: 1, name: 'Rudra Patel (Admin)', full_name: 'Rudra Patel (Admin)', email: 'rj423513@gmail.com', phone: '6353180208', role: 'admin' },
     };
     const demoUser = presets[role] || presets.rider;
     setError(null);
