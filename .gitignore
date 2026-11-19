@@ -29,6 +29,7 @@ server/inspect_schema.js
 server/search_history.js
 server/test_db_sync.js
 server/verify_live_sync.js
+server/restore_tables.js
 
 # Build outputs
 dist/
