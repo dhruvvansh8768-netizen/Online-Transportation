@@ -3,12 +3,32 @@ node_modules/
 client/node_modules/
 server/node_modules/
 
-# Environment variables
+# Environment variables & secrets (CRITICAL: Never commit)
 .env
+.env.*
+*.env
 client/.env
+client/.env.*
 server/.env
-.env.local
-.env.production
+server/.env.*
+*.pem
+*.key
+*.cert
+
+# Temporary Office & OS lock files
+~$*
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Temporary test / inspection scripts
+server/check_size.js
+server/count_slides.js
+server/inspect_lnk.js
+server/inspect_schema.js
+server/search_history.js
+server/test_db_sync.js
+server/verify_live_sync.js
 
 # Build outputs
 dist/
@@ -20,3 +40,4 @@ build/
 npm-debug.log*
 .DS_Store
 Thumbs.db
+

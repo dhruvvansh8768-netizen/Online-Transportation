@@ -1,11 +1,10 @@
 /**
- * Map Configuration & Carto API Key Integration
- * Exact raster tile URL from Carto:
- * https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_5835_1_c7df0d2862562bddb1bbf8a6
+ * Map Configuration & Carto Tile Integration
+ * Reads API Key securely from environment variables (VITE_MAP_API_KEY)
  */
 
-export const MAP_API_KEY =
-  import.meta.env.VITE_MAP_API_KEY || 'cb1_5835_1_c7df0d2862562bddb1bbf8a6';
+export const MAP_API_KEY = import.meta.env.VITE_MAP_API_KEY || '';
+const keyParam = MAP_API_KEY ? `?key=${MAP_API_KEY}` : '';
 
 // Default map center: Ahmedabad (Lab-2 / Lab-3 MG Road, Navrangpura)
 export const DEFAULT_MAP_CENTER = [23.0365, 72.5611];
@@ -16,7 +15,7 @@ export const MAP_STYLES = {
   // Official Carto Voyager raster tile as copied from Carto Dashboard
   voyager: {
     name: 'Carto Voyager (Day / Navigation)',
-    url: `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${MAP_API_KEY}`,
+    url: `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png${keyParam}`,
     maxZoom: 20,
     attribution:
       '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -24,7 +23,7 @@ export const MAP_STYLES = {
   // Carto Dark Matter raster tile
   dark: {
     name: 'Carto Dark Matter (Night Mode)',
-    url: `https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${MAP_API_KEY}`,
+    url: `https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png${keyParam}`,
     maxZoom: 20,
     attribution:
       '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -32,7 +31,7 @@ export const MAP_STYLES = {
   // Carto Positron (Light)
   light: {
     name: 'Carto Positron (Light Mode)',
-    url: `https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=${MAP_API_KEY}`,
+    url: `https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png${keyParam}`,
     maxZoom: 20,
     attribution:
       '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',

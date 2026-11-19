@@ -8,7 +8,13 @@
     "dev": "nodemon server.js",
     "db:init": "psql -U postgres -f database/schema.sql"
   },
-  "keywords": ["ride-hailing", "transportation", "express", "postgresql", "socket.io"],
+  "keywords": [
+    "ride-hailing",
+    "transportation",
+    "express",
+    "postgresql",
+    "socket.io"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -16,15 +22,16 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "pg": "^8.12.0",
     "socket.io": "^4.7.5",
-    "express-rate-limit": "^7.4.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "pptxgenjs": "^4.0.1"
   }
 }
