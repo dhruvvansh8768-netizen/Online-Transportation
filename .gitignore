@@ -30,6 +30,8 @@ server/search_history.js
 server/test_db_sync.js
 server/verify_live_sync.js
 server/restore_tables.js
+server/test_users.js
+server/add_admin.js
 
 # Build outputs
 dist/

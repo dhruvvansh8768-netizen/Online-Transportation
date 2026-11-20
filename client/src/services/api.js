@@ -4,7 +4,8 @@ import axios from 'axios';
  * Axios instance with base URL and interceptors
  * Automatically attaches auth token and handles common errors
  */
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const BASE_URL = rawBase.replace(/\/api\/?$/, '');
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api`,

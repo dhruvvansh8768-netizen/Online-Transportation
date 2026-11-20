@@ -46,7 +46,7 @@ export default function Login() {
           name="email"
           autoComplete="email"
           value={email}
-          placeholder="e.g. rj423513@gmail.com"
+          placeholder="Enter your email"
           required
           onChange={(event) => {
             setEmail(event.target.value);
@@ -84,7 +84,7 @@ export default function Login() {
               gap: '6px'
             }}
           >
-            <ShieldCheck size={14} /> Auto-fill Admin (rj423513@gmail.com)
+            <ShieldCheck size={14} /> Quick-fill Admin Credentials
           </button>
           <Link to="/forgot-password" className="rg-back">Password help</Link>
         </div>
