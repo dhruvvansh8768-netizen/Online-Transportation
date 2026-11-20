@@ -166,34 +166,53 @@ const AdminController = {
       const newUser = userRes.rows[0];
       executedQueries.push(`-- 1. Insert into users\nINSERT INTO users (full_name, email, phone, password_hash, role, is_active)\nVALUES ('${full_name}', '${cleanEmail}', '${cleanPhone}', '[BCRYPT_HASH]', '${role}', true)\nRETURNING *;`);
 
-      const parts = full_name.trim().split(' ');
-      const firstName = parts[0] || full_name;
-      const lastName = parts.slice(1).join(' ') || 'User';
+      const parts = full_name.trim().split(/\s+/);
+      const firstName = parts[0] || 'User';
+      const middleName = parts.length > 2 ? parts.slice(1, -1).join(' ') : null;
+      const lastName = parts.length > 1 ? parts[parts.length - 1] : 'Rider';
 
       if (role === 'rider') {
         try {
-          const custSql = `INSERT INTO "CUSTOMER" ("FirstName", "LastName", "Email", "PhoneNumber", "CustomerRating") VALUES ($1, $2, $3, $4, 5.0) RETURNING *;`;
-          await pool.query(custSql, [firstName, lastName, cleanEmail, cleanPhone]);
-          executedQueries.push(`-- 2. Insert into Lab-2/Lab-3 CUSTOMER table\nINSERT INTO "CUSTOMER" ("FirstName", "LastName", "Email", "PhoneNumber", "CustomerRating")\nVALUES ('${firstName}', '${lastName}', '${cleanEmail}', '${cleanPhone}', 5.0);`);
+          const custSql = `INSERT INTO customer (firstname, middlename, lastname) VALUES ($1, $2, $3) RETURNING *;`;
+          await pool.query(custSql, [firstName, middleName, lastName]);
+          executedQueries.push(`-- 2. Insert into Lab-2/Lab-3 CUSTOMER table\nINSERT INTO customer (firstname, middlename, lastname)\nVALUES ('${firstName}', ${middleName ? `'${middleName}'` : 'NULL'}, '${lastName}');`);
         } catch (e) {
           console.warn('[AdminController.createUser] CUSTOMER insert warning:', e.message);
         }
       } else if (role === 'driver') {
         const lic = license_number || `GJ01-2026-${Math.floor(1000 + Math.random() * 9000)}`;
         try {
-          const drvSql = `INSERT INTO drivers (user_id, license_number, is_available, is_verified) VALUES ($1, $2, true, true) RETURNING *;`;
+          const drvSql = `INSERT INTO drivers (user_id, license_number, years_of_experience, is_available, rating) VALUES ($1, $2, 1, true, 5.0) ON CONFLICT (user_id) DO NOTHING RETURNING *;`;
           await pool.query(drvSql, [newUser.user_id, lic]);
-          executedQueries.push(`-- 2. Insert into drivers table\nINSERT INTO drivers (user_id, license_number, is_available, is_verified)\nVALUES (${newUser.user_id}, '${lic}', true, true);`);
+          executedQueries.push(`-- 2. Insert into drivers table\nINSERT INTO drivers (user_id, license_number, years_of_experience, is_available, rating)\nVALUES (${newUser.user_id}, '${lic}', 1, true, 5.0);`);
         } catch (e) {
           console.warn('[AdminController.createUser] drivers insert warning:', e.message);
         }
 
         try {
-          const drvLabSql = `INSERT INTO "DRIVER" ("FirstName", "LastName", "Email", "PhoneNumber", "LicenseNumber", "DriverRating", "AvailabilityStatus") VALUES ($1, $2, $3, $4, $5, 5.0, 'Available') RETURNING *;`;
-          await pool.query(drvLabSql, [firstName, lastName, cleanEmail, cleanPhone, lic]);
-          executedQueries.push(`-- 3. Insert into Lab-2/Lab-3 DRIVER table\nINSERT INTO "DRIVER" ("FirstName", "LastName", "Email", "PhoneNumber", "LicenseNumber", "DriverRating", "AvailabilityStatus")\nVALUES ('${firstName}', '${lastName}', '${cleanEmail}', '${cleanPhone}', '${lic}', 5.0, 'Available');`);
+          const drvLabSql = `INSERT INTO driver (drivername, driverrating, drivercontactno, yearofexperience) VALUES ($1, 5.0, $2, 1) RETURNING *;`;
+          await pool.query(drvLabSql, [full_name, cleanPhone]);
+          executedQueries.push(`-- 3. Insert into Lab-2/Lab-3 DRIVER table\nINSERT INTO driver (drivername, driverrating, drivercontactno, yearofexperience)\nVALUES ('${full_name}', 5.0, '${cleanPhone}', 1);`);
         } catch (e) {
           console.warn('[AdminController.createUser] DRIVER table warning:', e.message);
+        }
+
+        try {
+          const vPlate = `GJ01AB${Math.floor(1000 + Math.random() * 9000)}`;
+          const vCode = `VH${Math.floor(100 + Math.random() * 900)}`;
+          const drvRes = await pool.query('SELECT driver_id FROM drivers WHERE user_id = $1', [newUser.user_id]);
+          if (drvRes.rows.length > 0) {
+            await pool.query(
+              'INSERT INTO vehicles (driver_id, vehicle_type, model, registration_number, color, vehicle_code) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (registration_number) DO NOTHING',
+              [drvRes.rows[0].driver_id, 'sedan', 'Swift Dzire', vPlate, 'White', vCode]
+            );
+          }
+          await pool.query(
+            'INSERT INTO vehicle (vehiclemodel, vehicletype, vehiclecolor, vehiclecode, lincenseplateno) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING',
+            ['Swift Dzire', 'Sedan', 'White', vCode, vPlate]
+          );
+        } catch (e) {
+          console.warn('[AdminController.createUser] vehicle table warning:', e.message);
         }
       }
 

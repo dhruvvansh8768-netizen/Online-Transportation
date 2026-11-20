@@ -32,6 +32,8 @@ server/verify_live_sync.js
 server/restore_tables.js
 server/test_users.js
 server/add_admin.js
+server/test_rider.js
+server/verify_signup_sync.js
 
 # Build outputs
 dist/

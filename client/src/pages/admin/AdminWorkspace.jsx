@@ -17,8 +17,8 @@ const demoLoad = async () => ({ data: { data: demoOverview } });
 export function AdminOverview({ reports = false }) {
   const { token } = useAuth();
   const demo = token === 'demo-token';
-  const resource = useResource(demo ? demoLoad : loadOverview);
-  const data = resource.data;
+  const resource = useResource(loadOverview);
+  const data = resource.data || (demo ? demoOverview : null);
   const metrics = data ? [
     ['Riders', data.stats.total_riders, Users, 'users'],
     ['Total rides', data.stats.total_rides, Car, 'rides'],
@@ -82,7 +82,7 @@ const emptyResponse = async () => ({ data: { data: {} } });
 export function AdminRecords({ type }) {
   const { token } = useAuth();
   const demo = token === 'demo-token';
-  const resource = useResource(demo ? emptyResponse : loadRows[type]);
+  const resource = useResource(loadRows[type]);
   const [samples, setSamples] = useState(() => demoRows[type]);
   const [query, setQuery] = useState('');
   const [creating, setCreating] = useState(false);
@@ -93,7 +93,8 @@ export function AdminRecords({ type }) {
   const [sqlModal, setSqlModal] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  const rows = demo ? samples : resource.data?.[fields[type]] || [];
+  const apiRows = resource.data?.[fields[type]];
+  const rows = apiRows && Array.isArray(apiRows) && apiRows.length > 0 ? apiRows : samples;
   const key = keys[type];
 
   const mutate = async (request, onDemo) => {

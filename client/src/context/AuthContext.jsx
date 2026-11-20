@@ -72,21 +72,45 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Instant demo login for presenting / testing online without DB setup
-  const demoLogin = useCallback((role = 'rider') => {
-    const presets = {
-      rider: { _id: 5, user_id: 5, name: 'Rahul Kumar Patel', full_name: 'Rahul Kumar Patel', email: 'rahul.patel@adaniuni.ac.in', phone: '9876500005', role: 'rider' },
-      driver: { _id: 1, user_id: 1, name: 'Ramesh Patel', full_name: 'Ramesh Patel', email: 'ramesh.driver@ridego.in', phone: '9876543210', role: 'driver' },
-      admin: { _id: 1, user_id: 1, name: 'Rudra Patel (Admin)', full_name: 'Rudra Patel (Admin)', email: 'rj423513@gmail.com', phone: '6353180208', role: 'admin' },
+  // Demo login for presenting: logs into PostgreSQL backend or falls back offline
+  const demoLogin = useCallback(async (role = 'rider') => {
+    const creds = {
+      admin: { email: 'admin@ridego.com', password: 'password123' },
+      driver: { email: 'ramesh@example.test', password: 'password123' },
+      rider: { email: 'rahul@example.test', password: 'password123' },
     };
-    const demoUser = presets[role] || presets.rider;
-    setError(null);
-    delete api.defaults.headers.common['Authorization'];
-    localStorage.setItem('token', 'demo-token');
-    localStorage.setItem('demo_user', JSON.stringify(demoUser));
-    setToken('demo-token');
-    setUser(demoUser);
-    return demoUser;
+    const c = creds[role] || creds.rider;
+    try {
+      let res;
+      try {
+        res = await authService.login({ email: c.email, password: '123456' });
+      } catch {
+        res = await authService.login({ email: c.email, password: 'password123' });
+      }
+      const payload = res.data?.data || res.data;
+      const { token: newToken, user: userData } = payload;
+      const normalized = normalizeUser(userData);
+      localStorage.removeItem('demo_user');
+      localStorage.setItem('token', newToken);
+      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      setToken(newToken);
+      setUser(normalized);
+      return normalized;
+    } catch (err) {
+      // Fallback offline preset if backend is not reachable
+      const presets = {
+        rider: { _id: 5, user_id: 5, name: 'Rahul Kumar Patel', full_name: 'Rahul Kumar Patel', email: 'rahul.patel@adaniuni.ac.in', phone: '9876500005', role: 'rider' },
+        driver: { _id: 1, user_id: 1, name: 'Ramesh Patel', full_name: 'Ramesh Patel', email: 'ramesh.driver@ridego.in', phone: '9876543210', role: 'driver' },
+        admin: { _id: 1, user_id: 1, name: 'Rudra Patel (Admin)', full_name: 'Rudra Patel (Admin)', email: 'admin@ridego.com', phone: '6353180208', role: 'admin' },
+      };
+      const demoUser = presets[role] || presets.rider;
+      setError(null);
+      localStorage.setItem('token', 'demo-token');
+      localStorage.setItem('demo_user', JSON.stringify(demoUser));
+      setToken('demo-token');
+      setUser(demoUser);
+      return demoUser;
+    }
   }, []);
 
   // Signup function for riders

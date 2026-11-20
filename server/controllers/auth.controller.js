@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const UserModel = require('../models/user.model');
 const DriverModel = require('../models/driver.model');
+const { pool } = require('../config/db');
 const { generateOTP } = require('../utils/generateOTP');
 require('dotenv').config();
 
@@ -143,7 +144,7 @@ const AuthController = {
       // 10. Hash password with bcrypt salt rounds = 12
       const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
 
-      // Create user
+      // Create user in users table
       const user = await UserModel.create({
         full_name,
         email: cleanEmail,
@@ -152,12 +153,61 @@ const AuthController = {
         role: userRole
       });
 
-      // If driver, create driver record
-      if (userRole === 'driver') {
-        await DriverModel.create({
-          user_id: user.user_id,
-          license_number
-        });
+      // Split full_name into first, middle, last names for 3NF CUSTOMER table
+      const nameParts = full_name.trim().split(/\s+/);
+      const firstName = nameParts[0] || 'User';
+      const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : null;
+      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : 'Rider';
+
+      if (userRole === 'rider') {
+        // Simultaneously persist into the official Lab-2/Lab-3 CUSTOMER table
+        try {
+          await pool.query(
+            'INSERT INTO customer (firstname, middlename, lastname) VALUES ($1, $2, $3)',
+            [firstName, middleName, lastName]
+          );
+        } catch (e) {
+          console.warn('[AuthController.signup] customer table insert warning:', e.message);
+        }
+      } else if (userRole === 'driver') {
+        const lic = license_number || `GJ01-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        try {
+          await pool.query(
+            'INSERT INTO drivers (user_id, license_number, years_of_experience, is_available, rating) VALUES ($1, $2, 1, true, 5.00) ON CONFLICT (user_id) DO NOTHING',
+            [user.user_id, lic]
+          );
+        } catch (e) {
+          console.warn('[AuthController.signup] drivers table insert warning:', e.message);
+        }
+
+        // Simultaneously persist into the official Lab-2/Lab-3 DRIVER table
+        try {
+          await pool.query(
+            'INSERT INTO driver (drivername, driverrating, drivercontactno, yearofexperience) VALUES ($1, 5.00, $2, 1)',
+            [full_name, phone]
+          );
+        } catch (e) {
+          console.warn('[AuthController.signup] driver table insert warning:', e.message);
+        }
+
+        // Simultaneously persist vehicle into vehicles AND official Lab-2/Lab-3 VEHICLE table
+        try {
+          const vPlate = `GJ01AB${Math.floor(1000 + Math.random() * 9000)}`;
+          const vCode = `VH${Math.floor(100 + Math.random() * 900)}`;
+          const drvRes = await pool.query('SELECT driver_id FROM drivers WHERE user_id = $1', [user.user_id]);
+          if (drvRes.rows.length > 0) {
+            await pool.query(
+              'INSERT INTO vehicles (driver_id, vehicle_type, model, registration_number, color, vehicle_code) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (registration_number) DO NOTHING',
+              [drvRes.rows[0].driver_id, 'sedan', 'Swift Dzire', vPlate, 'White', vCode]
+            );
+          }
+          await pool.query(
+            'INSERT INTO vehicle (vehiclemodel, vehicletype, vehiclecolor, vehiclecode, lincenseplateno) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING',
+            ['Swift Dzire', 'Sedan', 'White', vCode, vPlate]
+          );
+        } catch (e) {
+          console.warn('[AuthController.signup] vehicle table insert warning:', e.message);
+        }
       }
 
       // Generate secure JWT token
